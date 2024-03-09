@@ -16,6 +16,7 @@ class GroceryListWidget extends StatefulWidget {
 
 class _GroceryListWidgetState extends State<GroceryListWidget> {
   List<GroceryItem> _groceryItem = [];
+  var _isLoading = true;
 
   @override
   void initState() {
@@ -27,8 +28,7 @@ class _GroceryListWidgetState extends State<GroceryListWidget> {
     final url = Uri.https(
         'flutter-shop-66044-default-rtdb.firebaseio.com', 'shopping-list.json');
     final response = await http.get(url);
-    final Map<String, dynamic> listData =
-        json.decode(response.body);
+    final Map<String, dynamic> listData = json.decode(response.body);
     final List<GroceryItem> loadedItems = [];
     for (final item in listData.entries) {
       final category = categories.entries
@@ -47,6 +47,7 @@ class _GroceryListWidgetState extends State<GroceryListWidget> {
     }
     setState(() {
       _groceryItem = loadedItems;
+      _isLoading = false;
     });
   }
 
@@ -58,7 +59,7 @@ class _GroceryListWidgetState extends State<GroceryListWidget> {
       ),
     );
 
-    if(newItem == null){
+    if (newItem == null) {
       return;
     }
 
@@ -88,6 +89,12 @@ class _GroceryListWidgetState extends State<GroceryListWidget> {
         'NO Item',
       ),
     );
+
+    if (_isLoading) {
+      content = const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
 
     if (_groceryItem.isNotEmpty) {
       content = ListView.builder(
