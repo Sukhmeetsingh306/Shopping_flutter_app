@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_shopping_app/data/category_data.dart';
 import 'package:flutter_shopping_app/models/grocery_models.dart';
 import 'package:flutter_shopping_app/widget/new_item_widget.dart';
+
+import 'package:http/http.dart' as http;
 
 class GroceryListWidget extends StatefulWidget {
   const GroceryListWidget({super.key});
@@ -10,22 +15,64 @@ class GroceryListWidget extends StatefulWidget {
 }
 
 class _GroceryListWidgetState extends State<GroceryListWidget> {
-  final List<GroceryItem> _groceryItem = [];
+  List<GroceryItem> _groceryItem = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  void _loadData() async {
+    final url = Uri.https(
+        'flutter-shop-66044-default-rtdb.firebaseio.com', 'shopping-list.json');
+    final response = await http.get(url);
+    final Map<String, dynamic> listData =
+        json.decode(response.body);
+    final List<GroceryItem> loadedItems = [];
+    for (final item in listData.entries) {
+      final category = categories.entries
+          .firstWhere(
+            (catItem) => catItem.value.title == item.value['category'],
+          )
+          .value;
+      loadedItems.add(
+        GroceryItem(
+          id: item.key,
+          name: item.value['name'],
+          quantity: item.value['quantity'],
+          category: category,
+        ),
+      );
+    }
+    setState(() {
+      _groceryItem = loadedItems;
+    });
+  }
 
   void _addItem() async {
+    // final newItem = await Navigator.of(context).push<GroceryItem>(
     final newItem = await Navigator.of(context).push<GroceryItem>(
       MaterialPageRoute(
         builder: (context) => const NewItemWidget(),
       ),
     );
 
-    if (newItem == null) {
+    if(newItem == null){
       return;
     }
 
     setState(() {
       _groceryItem.add(newItem);
     });
+    //_loadData();
+    // if (newItem == null) {
+    //   return;
+    // }
+
+    // setState(() {
+    //   _groceryItem.add(newItem);
+    // }); // this was to be used when we were not using the firebase and getting the data form the user and displaying that
   }
 
   void _removeItem(GroceryItem item) {
