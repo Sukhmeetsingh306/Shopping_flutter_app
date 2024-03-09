@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -84,10 +86,37 @@ class _GroceryListWidgetState extends State<GroceryListWidget> {
     // }); // this was to be used when we were not using the firebase and getting the data form the user and displaying that
   }
 
-  void _removeItem(GroceryItem item) {
+  void _removeItem(GroceryItem item) async {
+    final index = _groceryItem.indexOf(item);
     setState(() {
       _groceryItem.remove(item);
     });
+    final url = Uri.https('flutter-shop-66044-default-rtdb.firebaseio.com',
+        'shopping-list/${item.id}.json');
+
+    final response = await http.delete(url);
+
+    if (response.statusCode >= 400) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            "Can't be deleted, PleaseTry again Later",
+            style: TextStyle(
+              //color: Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        ),
+      );
+      setState(() {
+        _groceryItem.insert(index, item);
+      });
+    }
   }
 
   @override
