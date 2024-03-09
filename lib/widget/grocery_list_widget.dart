@@ -17,6 +17,7 @@ class GroceryListWidget extends StatefulWidget {
 class _GroceryListWidgetState extends State<GroceryListWidget> {
   List<GroceryItem> _groceryItem = [];
   var _isLoading = true;
+  String? _error; // check the error for the database
 
   @override
   void initState() {
@@ -28,6 +29,13 @@ class _GroceryListWidgetState extends State<GroceryListWidget> {
     final url = Uri.https(
         'flutter-shop-66044-default-rtdb.firebaseio.com', 'shopping-list.json');
     final response = await http.get(url);
+
+    if (response.statusCode >= 400) {
+      setState(() {
+        _error = 'Failed to fetch Data, Please try again later.';
+      });
+    }
+
     final Map<String, dynamic> listData = json.decode(response.body);
     final List<GroceryItem> loadedItems = [];
     for (final item in listData.entries) {
@@ -134,6 +142,14 @@ class _GroceryListWidgetState extends State<GroceryListWidget> {
               _groceryItem[index].quantity.toString(),
             ),
           ),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      content = Center(
+        child: Text(
+          _error!,
         ),
       );
     }
